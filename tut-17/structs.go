@@ -7,11 +7,19 @@ import (
 
 // structs are like structure with the help we can create any custom data type object or class
 
+type Option func(*order)
+
+type customer struct {
+	name        string
+	telephoneNo string
+}
+
 type order struct {
 	id        string
 	amount    float32
 	status    string
 	createdAt time.Time // nanoseconds precision
+	customer
 }
 
 // convetion is use first letter of struct for creating a method init
@@ -35,12 +43,32 @@ func (o *order) setAmount2(amount float32) {
 
 // Constructor
 
-func NewOrder(id string, amount float32, createdAt time.Time) *order {
+func withCustomerName(name string) Option {
+	return func(o *order) {
+		o.customer.name = name
+	}
+}
+
+func withCustomerPhone(phone string) Option {
+	return func(o *order) {
+		*&o.customer.telephoneNo = phone
+	}
+}
+
+func NewOrder(id string, amount float32, createdAt time.Time, option ...Option) *order {
 
 	myorder := order{
 		id:        id,
 		amount:    amount,
 		createdAt: createdAt,
+		customer: customer{
+			name:        "",
+			telephoneNo: "",
+		},
+	}
+
+	for _, item := range option {
+		item(&myorder)
 	}
 
 	return &myorder
@@ -92,5 +120,15 @@ func main() {
 		role string
 	}{"savi", "Software Engineer"}
 	fmt.Println(myStruct.name, myStruct.role, myStruct)
+
+	// struct embeddings
+
+	customer1 := customer{
+		name:        "Savi",
+		telephoneNo: "12344",
+	}
+	var customOrder = NewOrder("123", 897.76, time.Now(), withCustomerName(customer1.name), withCustomerPhone(customer1.telephoneNo))
+	fmt.Println("customOrder>>>", customOrder)
+	// struct embedidngs are used to add inheritence between structs
 
 }
